@@ -1,0 +1,67 @@
+﻿@page "/register"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavManager
+
+<PageTitle>Register</PageTitle>
+
+
+
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="UserName" HelperText="Max. 8 characters"
+                              @bind-Value="model.UserName" For="@(() => model.UserName)"/>
+                <MudTextField Label="Password" HelperText="Max. 8 characters"
+                                @bind-Value="model.Password" For="@(() => model.Password)" />
+                <MudTextField Label="ConfirmPassword" HelperText="Max. 8 characters"
+                            @bind-Value="model.ConfirmPassword" For="@(() => model.ConfirmPassword)" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+</EditForm>
+
+@code {
+    RegisterAccountForm model = new RegisterAccountForm();
+
+    public class RegisterAccountForm
+    {
+        [Required]
+        public string? UserName { get; set; }
+
+        [Required]
+        public string? Password { get; set; }
+
+        [Required]
+        public string? ConfirmPassword { get; set; }
+    }
+
+    private void Redirect()
+    {
+        NavManager.NavigateTo("/profile");
+    }
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        var client = new HttpClient();
+        client.BaseAddress = new Uri("https://localhost:7181");
+
+        var message = new HttpRequestMessage(HttpMethod.Post, "/api/Account/register");
+        message.Content = JsonContent.Create(model);
+        message.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+        var result = await (await client.SendAsync(message)).Content.ReadAsStringAsync();
+        Console.WriteLine(result);
+        if (result is not null)
+        {
+            Redirect();
+        }
+    }
+}

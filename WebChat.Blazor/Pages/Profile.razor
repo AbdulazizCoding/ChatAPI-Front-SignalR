@@ -1,0 +1,30 @@
+﻿@page "/profile"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HttpClient Http
+
+
+<h1>Your username: @UserName</h1>
+
+@code{
+    private string UserName;
+
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl("https://localhost:7181/hub")
+            .Build();
+
+
+        _hubConnection.On<string>("Profile", GetProfile);
+        await _hubConnection.StartAsync();
+        await _hubConnection.InvokeAsync("GetProfile");
+    }
+
+    private void GetProfile(string username)
+    {
+        UserName = username;
+        StateHasChanged();
+    }
+}
